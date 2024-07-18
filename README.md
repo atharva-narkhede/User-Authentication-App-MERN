@@ -1,9 +1,6 @@
 # MERN Auth Project
 
-This repository contains a full-stack application built with the MERN stack (MongoDB, Express.js, React.js, and Node.js). The project is divided into two main parts:
-
-1. **Backend**: Handles the server-side logic, including user authentication and database operations.
-2. **Frontend (Auth)**: Provides the user interface for authentication, including login, registration, and profile management.
+This repository contains a full-stack application built with the MERN stack (MongoDB, Express.js, React.js, and Node.js). It includes secure authentication with JSON Web Tokens (JWT), cookie handling for session management, and robust input validation using express-validator.
 
 ## Project Structure
 
@@ -11,6 +8,7 @@ This repository contains a full-stack application built with the MERN stack (Mon
 /backend      # Node.js/Express backend
 /auth         # React frontend
 ```
+
 ## Getting Started
 
 ### Prerequisites
@@ -25,6 +23,7 @@ This repository contains a full-stack application built with the MERN stack (Mon
    ```sh
    git clone https://github.com/atharva-narkhede/Mern-Authentication-App.git
    cd mern-auth-project
+   ```
 
 2. Install dependencies for both backend and frontend:
    ```sh
@@ -74,6 +73,40 @@ This repository contains a full-stack application built with the MERN stack (Mon
 
 - Navigate to `http://localhost:3000` in your browser to access the frontend.
 - The backend API is accessible at `http://localhost:5000`.
+
+## Secure Authentication and Validation
+
+### Authentication
+
+The backend uses JWT for secure authentication. Tokens are generated during login and stored in HTTP-only cookies for secure session management. The tokens are verified on each request to protected routes to ensure that only authenticated users can access them.
+
+### Input Validation
+
+The application uses `express-validator` to validate and sanitize input data. This ensures that all user inputs are checked for validity and sanitized to prevent security vulnerabilities such as SQL injection and XSS attacks.
+
+## Libraries Used
+
+### Backend Libraries
+
+- **bcryptjs**: For hashing and comparing passwords.
+- **cookie-parser**: To parse cookies in requests.
+- **cors**: To enable Cross-Origin Resource Sharing.
+- **dotenv**: To manage environment variables.
+- **express**: For creating the server and handling routes.
+- **express-validator**: For validating and sanitizing input data.
+- **helmet**: To secure HTTP headers.
+- **jsonwebtoken**: For generating and verifying JSON Web Tokens.
+- **mongoose**: For interacting with MongoDB.
+- **winston**: For logging information and errors.
+
+### Frontend Libraries
+
+- **react**: JavaScript library for building user interfaces.
+- **react-dom**: Entry point to the DOM and server renderers for React.
+- **react-router-dom**: Declarative routing for React.
+- **axios**: Promise-based HTTP client for the browser and Node.js.
+- **bootstrap**: Front-end framework for building responsive, mobile-first sites.
+- **styled-components**: Library for styling React components.
 
 ## Contributing
 
