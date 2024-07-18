@@ -25,12 +25,12 @@ This directory contains the backend code for the MERN Auth Project, built with N
 ### Configuration
 
 1. Create a `.env` file in the `backend` directory and add the following environment variables:
-```env
-PORT=5000
-MONGO_URI=mongodb://localhost:27017/auth
-JWT_SECRET=GITHUB
-NODE_ENV=development
-```
+   ```env
+   PORT=5000
+   MONGO_URI=mongodb://localhost:27017/auth
+   JWT_SECRET=GITHUB
+   NODE_ENV=development
+   ```
 
 ### Running the Server
 
@@ -41,6 +41,20 @@ node server
 
 The server will start on `http://localhost:5000`.
 
+### Dependencies
+
+The following libraries are used in the backend for secure authentication and other functionalities:
+
+- **bcryptjs**: For hashing and comparing passwords.
+- **cookie-parser**: To parse cookies in requests.
+- **cors**: To enable Cross-Origin Resource Sharing.
+- **dotenv**: To manage environment variables.
+- **express**: For creating the server and handling routes.
+- **express-validator**: For validating and sanitizing input data.
+- **helmet**: To secure HTTP headers.
+- **jsonwebtoken**: For generating and verifying JSON Web Tokens.
+- **mongoose**: For interacting with MongoDB.
+- **winston**: For logging information and errors.
 
 ### API Endpoints
 
