@@ -1,0 +1,56 @@
+body {
+  padding-top: 70px; /* Adjust this value based on the height of your header */
+}
+
+.navbar {
+  background-color: #007bff;
+  transition: background-color 0.3s;
+}
+
+.sticky {
+  background-color: #0056b3;
+}
+
+.navbar-brand-text {
+  color: #fff;
+}
+
+.navbar-nav .nav-link {
+  color: #fff;
+}
+
+.navbar-toggler {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.navbar-toggler-icon {
+  background-image: url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3E%3Cpath stroke='rgba%28white, 1%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E");
+}
+
+.btn-outline-light {
+  color: #fff;
+  border-color: #fff;
+}
+
+.btn-outline-light:hover {
+  color: #007bff;
+  background-color: #fff;
+  border-color: #fff;
+}
+
+.navbar-collapse {
+  background-color: rgba(0, 0, 0, 0.5); /* Add a semi-transparent background */
+}
+
+.navbar-nav .nav-item {
+  margin-left: 0.5rem;
+  margin-right: 0.5rem;
+}
+
+.container {
+  padding-top: 1rem;
+}
+
+.navbar-expanded .navbar-collapse {
+  background-color: rgba(0, 0, 0, 0.7);
+}
