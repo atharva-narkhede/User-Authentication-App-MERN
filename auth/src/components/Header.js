@@ -80,7 +80,7 @@ function Header() {
     >
       <Container>
         <Navbar.Brand href="/" className="d-flex">
-          <StyledNavbarBrandText>MERN Auth</StyledNavbarBrandText>
+          <StyledNavbarBrandText>Auth</StyledNavbarBrandText>
         </Navbar.Brand>
         <Navbar.Toggle
           aria-controls="responsive-navbar-nav"
