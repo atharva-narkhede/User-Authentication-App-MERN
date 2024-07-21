@@ -67,10 +67,11 @@ const authUser = async (req, res) => {
       res.cookie('token', token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        maxAge: 30 * 1000, // 30 secs
+        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
       });
 
       res.json({
+        _id: user._id,
         username: user.username,
         email: user.email,
         token,
@@ -125,11 +126,18 @@ const updateUserProfile = async (req, res) => {
 
       const updatedUser = await user.save();
 
+      const token = generateToken(updatedUser._id);
+      res.cookie('token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      });
+
       res.json({
         _id: updatedUser._id,
         username: updatedUser.username,
         email: updatedUser.email,
-        token: generateToken(updatedUser._id),
+        token,
       });
     } else {
       res.status(404).json({ message: 'User not found' });
