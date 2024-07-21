@@ -11,4 +11,13 @@ const validateLogin = [
   check('password', 'Password is required').exists(),
 ];
 
-module.exports = { validateRegister, validateLogin };
+const validateForgotPassword = [
+  check('email', 'Please include a valid email').isEmail(),
+];
+
+const validateResetPassword = [
+  check('resetToken', 'Reset token is required').not().isEmpty(),
+  check('newPassword', 'Password must be at least 6 characters').isLength({ min: 6 }),
+];
+
+module.exports = { validateRegister, validateLogin, validateForgotPassword, validateResetPassword };

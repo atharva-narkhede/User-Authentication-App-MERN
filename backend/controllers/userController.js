@@ -145,6 +145,90 @@ const updateUserProfile = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
   }
-};
+  const forgotPassword = async (req, res) => {
+    const { email } = req.body;
 
-module.exports = { registerUser, authUser, logoutUser, getUserProfile, updateUserProfile };
+    try {
+      const user = await User.findOne({ email });
+
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      const resetToken = crypto.randomBytes(20).toString('hex');
+
+      user.resetToken = resetToken;
+      user.resetTokenExpire = Date.now() + 10 * 60 * 1000; // 10 minutes
+      await user.save();
+
+      const resetUrl = `http://localhost:5000/passwordreset/${resetToken}`;
+
+      const message = `You are receiving this email because you (or someone else) have requested the reset of a password. Please make a PUT request to: \n\n ${resetUrl}`;
+
+      // Send email (setup nodemailer as per your requirements)
+      const transporter = nodemailer.createTransport({
+        // setup your transporter
+      });
+
+      await transporter.sendMail({
+        to: user.email,
+        subject: 'Password Reset Token',
+        text: message,
+      });
+
+      res.status(200).json({ message: 'Email sent' });
+    } catch (error) {
+      res.status(500).json({ message: 'Server error' });
+    }
+  };
+
+  const resetPassword = async (req, res) => {
+    const { resetToken, newPassword } = req.body;
+
+    try {
+      const user = await User.findOne({
+        resetToken,
+        resetTokenExpire: { $gt: Date.now() },
+      });
+
+      if (!user) {
+        return res.status(400).json({ message: 'Invalid token or token expired' });
+      }
+
+      const newPasswordHash = await bcrypt.hash(newPassword, 10);
+
+      // Check if new password has been used before
+      const isUsedBefore = user.passwordHistory.some(async (history) => {
+        return await bcrypt.compare(newPassword, history.password);
+      });
+
+      if (isUsedBefore) {
+        return res.status(400).json({ message: 'New password cannot be the same as any of the previous passwords' });
+      }
+
+      user.passwordHistory.push({ password: newPasswordHash });
+      if (user.passwordHistory.length > 5) {
+        user.passwordHistory.shift(); // Keep only last 5 passwords
+      }
+
+      user.password = newPassword;
+      user.resetToken = undefined;
+      user.resetTokenExpire = undefined;
+      await user.save();
+
+      res.status(200).json({ message: 'Password reset successful' });
+    } catch (error) {
+      res.status(500).json({ message: 'Server error' });
+    }
+  };
+
+  module.exports = {
+    registerUser,
+    authUser,
+    logoutUser,
+    getUserProfile,
+    updateUserProfile,
+    forgotPassword,
+    resetPassword,
+  }
+}
