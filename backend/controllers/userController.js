@@ -67,11 +67,10 @@ const authUser = async (req, res) => {
       res.cookie('token', token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+        maxAge: 30 * 1000, // 30 secs
       });
 
       res.json({
-        _id: user._id,
         username: user.username,
         email: user.email,
         token,
