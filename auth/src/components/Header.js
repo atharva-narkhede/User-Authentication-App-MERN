@@ -39,10 +39,7 @@ const StyledNavbarBrandText = styled.span`
   color: #ffffff;
 `;
 
-const StyledNavbarText = styled.span`
-  color: #ffffff;
-  margin-right: 10px;
-`;
+
 
 function Header() {
   const [expand, updateExpanded] = useState(false);
