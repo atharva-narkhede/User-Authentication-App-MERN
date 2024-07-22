@@ -137,7 +137,6 @@ const updateUserProfile = async (req, res) => {
 
     if (user) {
       user.username = req.body.username || user.username;
-      user.email = req.body.email || user.email;
 
       if (req.body.password) {
         // Check if new password has been used before
@@ -195,7 +194,6 @@ const forgotPassword = async (req, res) => {
     }
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    //console.log("OTP:"+otp)
     const hashedOTP = await bcrypt.hash(otp, 10);
 
     user.otp = hashedOTP;
