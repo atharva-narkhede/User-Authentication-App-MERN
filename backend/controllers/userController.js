@@ -194,6 +194,7 @@ const forgotPassword = async (req, res) => {
     }
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    //console.log(otp)
     const hashedOTP = await bcrypt.hash(otp, 10);
 
     user.otp = hashedOTP;
@@ -208,7 +209,7 @@ const forgotPassword = async (req, res) => {
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
-      },
+      }
     });
 
     const mailOptions = {
