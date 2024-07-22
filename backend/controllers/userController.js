@@ -1,7 +1,6 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/userModel');
 const { validationResult } = require('express-validator');
-const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const bcrypt = require('bcryptjs');
 require('dotenv').config();
@@ -141,6 +140,21 @@ const updateUserProfile = async (req, res) => {
       user.email = req.body.email || user.email;
 
       if (req.body.password) {
+        // Check if new password has been used before
+        const newPasswordHash = await bcrypt.hash(req.body.password, 10);
+        const isUsedBefore = await Promise.all(user.passwordHistory.map(async (history) => {
+          return await bcrypt.compare(req.body.password, history.password);
+        }));
+
+        if (isUsedBefore.includes(true)) {
+          return res.status(400).json({ message: 'New password cannot be the same as any of the previous passwords' });
+        }
+
+        user.passwordHistory.push({ password: newPasswordHash });
+        if (user.passwordHistory.length > 5) {
+          user.passwordHistory.shift(); // Keep only last 5 passwords
+        }
+
         user.password = req.body.password;
       }
 
@@ -166,7 +180,7 @@ const updateUserProfile = async (req, res) => {
       res.status(404).json({ message: 'User not found' });
     }
   } catch (error) {
-    res.status500.json({ message: 'Server error' });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -180,17 +194,15 @@ const forgotPassword = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    const resetToken = crypto.randomBytes(20).toString('hex');
-    //const resetToken = Math.floor(100000 + Math.random() * 900000).toString();
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    //console.log("OTP:"+otp)
+    const hashedOTP = await bcrypt.hash(otp, 10);
 
-    user.resetToken = resetToken;
-    user.resetTokenExpire = Date.now() + 10 * 60 * 1000; // 10 minutes
+    user.otp = hashedOTP;
+    user.otpExpire = Date.now() + 10 * 60 * 1000; // 10 minutes
     await user.save();
 
-
-    const resetUrl = `${process.env.URL}/passwordreset/${resetToken}`;
-
-    const message = `You are receiving this email because you (or someone else) have requested the reset of a password. Please make a PUT request to: \n\n ${resetUrl}`;
+    const message = `Your OTP for password reset is: ${otp}. It is valid for 10 minutes.`;
 
     // Create a transporter
     const transporter = nodemailer.createTransport({
@@ -204,39 +216,43 @@ const forgotPassword = async (req, res) => {
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: user.email,
-      subject: 'Password Reset Token',
+      subject: 'Password Reset OTP',
       text: message,
     };
 
-    //await transporter.sendMail(mailOptions);
+    await transporter.sendMail(mailOptions);
 
-    res.status(200).json({ message: 'Email sent' });
+    res.status(200).json({ message: 'OTP sent' });
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
   }
 };
 
 const resetPassword = async (req, res) => {
-  const { resetToken, newPassword } = req.body;
+  const { otp, newPassword } = req.body;
 
   try {
     const user = await User.findOne({
-      resetToken,
-      resetTokenExpire: { $gt: Date.now() },
+      otpExpire: { $gt: Date.now() },
     });
 
     if (!user) {
-      return res.status(400).json({ message: 'Invalid token or token expired' });
+      return res.status(400).json({ message: 'Invalid OTP or OTP expired' });
+    }
+
+    const isOTPValid = await user.matchOTP(otp);
+    if (!isOTPValid) {
+      return res.status(400).json({ message: 'Invalid OTP' });
     }
 
     const newPasswordHash = await bcrypt.hash(newPassword, 10);
 
     // Check if new password has been used before
-    const isUsedBefore = user.passwordHistory.some(async (history) => {
+    const isUsedBefore = await Promise.all(user.passwordHistory.map(async (history) => {
       return await bcrypt.compare(newPassword, history.password);
-    });
+    }));
 
-    if (isUsedBefore) {
+    if (isUsedBefore.includes(true)) {
       return res.status(400).json({ message: 'New password cannot be the same as any of the previous passwords' });
     }
 
@@ -246,8 +262,8 @@ const resetPassword = async (req, res) => {
     }
 
     user.password = newPassword;
-    user.resetToken = undefined;
-    user.resetTokenExpire = undefined;
+    user.otp = undefined;
+    user.otpExpire = undefined;
     await user.save();
 
     res.status(200).json({ message: 'Password reset successful' });

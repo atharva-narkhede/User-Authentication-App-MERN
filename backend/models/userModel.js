@@ -11,8 +11,8 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   token: { type: String },
-  resetToken: { type: String },
-  resetTokenExpire: { type: Date },
+  otp: { type: String },
+  otpExpire: { type: Date },
   passwordHistory: [passwordHistorySchema]
 });
 
@@ -26,6 +26,10 @@ userSchema.pre('save', async function (next) {
 
 userSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
+};
+
+userSchema.methods.matchOTP = async function (enteredOTP) {
+  return await bcrypt.compare(enteredOTP, this.otp);
 };
 
 const User = mongoose.model('User', userSchema);
