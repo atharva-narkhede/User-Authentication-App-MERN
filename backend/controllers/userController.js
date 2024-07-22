@@ -1,6 +1,10 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/userModel');
 const { validationResult } = require('express-validator');
+const crypto = require('crypto');
+const nodemailer = require('nodemailer');
+const bcrypt = require('bcryptjs');
+require('dotenv').config();
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -31,6 +35,9 @@ const registerUser = async (req, res) => {
 
     if (user) {
       const token = generateToken(user._id);
+      user.token = token;
+      await user.save();
+
       res.cookie('token', token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
@@ -64,6 +71,9 @@ const authUser = async (req, res) => {
 
     if (user && (await user.matchPassword(password))) {
       const token = generateToken(user._id);
+      user.token = token;
+      await user.save();
+
       res.cookie('token', token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
@@ -84,9 +94,19 @@ const authUser = async (req, res) => {
   }
 };
 
-const logoutUser = (req, res) => {
-  res.cookie('token', '', { httpOnly: true, expires: new Date(0), secure: process.env.NODE_ENV === 'production' });
-  res.status(200).json({ message: 'Logged out successfully' });
+const logoutUser = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (user) {
+      user.token = null;
+      await user.save();
+    }
+
+    res.cookie('token', '', { httpOnly: true, expires: new Date(0), secure: process.env.NODE_ENV === 'production' });
+    res.status(200).json({ message: 'Logged out successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
+  }
 };
 
 const getUserProfile = async (req, res) => {
@@ -127,6 +147,9 @@ const updateUserProfile = async (req, res) => {
       const updatedUser = await user.save();
 
       const token = generateToken(updatedUser._id);
+      user.token = token;
+      await user.save();
+
       res.cookie('token', token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
@@ -143,92 +166,102 @@ const updateUserProfile = async (req, res) => {
       res.status(404).json({ message: 'User not found' });
     }
   } catch (error) {
+    res.status500.json({ message: 'Server error' });
+  }
+};
+
+const forgotPassword = async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const resetToken = crypto.randomBytes(20).toString('hex');
+    //const resetToken = Math.floor(100000 + Math.random() * 900000).toString();
+
+    user.resetToken = resetToken;
+    user.resetTokenExpire = Date.now() + 10 * 60 * 1000; // 10 minutes
+    await user.save();
+
+
+    const resetUrl = `${process.env.URL}/passwordreset/${resetToken}`;
+
+    const message = `You are receiving this email because you (or someone else) have requested the reset of a password. Please make a PUT request to: \n\n ${resetUrl}`;
+
+    // Create a transporter
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: user.email,
+      subject: 'Password Reset Token',
+      text: message,
+    };
+
+    //await transporter.sendMail(mailOptions);
+
+    res.status(200).json({ message: 'Email sent' });
+  } catch (error) {
     res.status(500).json({ message: 'Server error' });
   }
-  const forgotPassword = async (req, res) => {
-    const { email } = req.body;
+};
 
-    try {
-      const user = await User.findOne({ email });
+const resetPassword = async (req, res) => {
+  const { resetToken, newPassword } = req.body;
 
-      if (!user) {
-        return res.status(404).json({ message: 'User not found' });
-      }
+  try {
+    const user = await User.findOne({
+      resetToken,
+      resetTokenExpire: { $gt: Date.now() },
+    });
 
-      const resetToken = crypto.randomBytes(20).toString('hex');
-
-      user.resetToken = resetToken;
-      user.resetTokenExpire = Date.now() + 10 * 60 * 1000; // 10 minutes
-      await user.save();
-
-      const resetUrl = `http://localhost:5000/passwordreset/${resetToken}`;
-
-      const message = `You are receiving this email because you (or someone else) have requested the reset of a password. Please make a PUT request to: \n\n ${resetUrl}`;
-
-      // Send email (setup nodemailer as per your requirements)
-      const transporter = nodemailer.createTransport({
-        // setup your transporter
-      });
-
-      await transporter.sendMail({
-        to: user.email,
-        subject: 'Password Reset Token',
-        text: message,
-      });
-
-      res.status(200).json({ message: 'Email sent' });
-    } catch (error) {
-      res.status(500).json({ message: 'Server error' });
+    if (!user) {
+      return res.status(400).json({ message: 'Invalid token or token expired' });
     }
-  };
 
-  const resetPassword = async (req, res) => {
-    const { resetToken, newPassword } = req.body;
+    const newPasswordHash = await bcrypt.hash(newPassword, 10);
 
-    try {
-      const user = await User.findOne({
-        resetToken,
-        resetTokenExpire: { $gt: Date.now() },
-      });
+    // Check if new password has been used before
+    const isUsedBefore = user.passwordHistory.some(async (history) => {
+      return await bcrypt.compare(newPassword, history.password);
+    });
 
-      if (!user) {
-        return res.status(400).json({ message: 'Invalid token or token expired' });
-      }
-
-      const newPasswordHash = await bcrypt.hash(newPassword, 10);
-
-      // Check if new password has been used before
-      const isUsedBefore = user.passwordHistory.some(async (history) => {
-        return await bcrypt.compare(newPassword, history.password);
-      });
-
-      if (isUsedBefore) {
-        return res.status(400).json({ message: 'New password cannot be the same as any of the previous passwords' });
-      }
-
-      user.passwordHistory.push({ password: newPasswordHash });
-      if (user.passwordHistory.length > 5) {
-        user.passwordHistory.shift(); // Keep only last 5 passwords
-      }
-
-      user.password = newPassword;
-      user.resetToken = undefined;
-      user.resetTokenExpire = undefined;
-      await user.save();
-
-      res.status(200).json({ message: 'Password reset successful' });
-    } catch (error) {
-      res.status(500).json({ message: 'Server error' });
+    if (isUsedBefore) {
+      return res.status(400).json({ message: 'New password cannot be the same as any of the previous passwords' });
     }
-  };
 
-  module.exports = {
-    registerUser,
-    authUser,
-    logoutUser,
-    getUserProfile,
-    updateUserProfile,
-    forgotPassword,
-    resetPassword,
+    user.passwordHistory.push({ password: newPasswordHash });
+    if (user.passwordHistory.length > 5) {
+      user.passwordHistory.shift(); // Keep only last 5 passwords
+    }
+
+    user.password = newPassword;
+    user.resetToken = undefined;
+    user.resetTokenExpire = undefined;
+    await user.save();
+
+    res.status(200).json({ message: 'Password reset successful' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error' });
   }
-}
+};
+
+module.exports = {
+  registerUser,
+  authUser,
+  logoutUser,
+  getUserProfile,
+  updateUserProfile,
+  forgotPassword,
+  resetPassword,
+};
