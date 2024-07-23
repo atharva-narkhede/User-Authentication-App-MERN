@@ -271,6 +271,28 @@ const resetPassword = async (req, res) => {
   }
 };
 
+const validateToken = async (req, res) => {
+  const token = req.cookies.token;
+
+  if (!token) {
+    return res.status(401).json({ message: 'No token provided' });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id).select('-password');
+
+    if (!user || user.token !== token) {
+      return res.status(401).json({ message: 'Invalid token' });
+    }
+
+    res.status(200).json({ message: 'Token is valid', user: { id: user._id, username: user.username, email: user.email } });
+  } catch (error) {
+    console.error('Token validation failed:', error.message);
+    res.status(401).json({ message: 'Token validation failed' });
+  }
+};
+
 module.exports = {
   registerUser,
   authUser,
@@ -279,4 +301,5 @@ module.exports = {
   updateUserProfile,
   forgotPassword,
   resetPassword,
+  validateToken
 };
