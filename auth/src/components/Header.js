@@ -1,10 +1,9 @@
-import React, { useState, useContext } from "react";
+import React, { useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Navbar from "react-bootstrap/Navbar";
 import Nav from "react-bootstrap/Nav";
 import Container from "react-bootstrap/Container";
 import { AuthContext } from "../context/AuthContext";
-import axios from "axios";
 import styled from "styled-components";
 
 const StyledNavbar = styled(Navbar)`
@@ -39,59 +38,26 @@ const StyledNavbarBrandText = styled.span`
   color: #ffffff;
 `;
 
-
-
 function Header() {
-  const [expand, updateExpanded] = useState(false);
-  const [navColour, updateNavbar] = useState(false);
   const { user, isAuth, logout } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  function scrollHandler() {
-    if (window.scrollY >= 20) {
-      updateNavbar(true);
-    } else {
-      updateNavbar(false);
-    }
-  }
-
-  window.addEventListener("scroll", scrollHandler);
-
   const handleLogout = async () => {
-    try {
-      await axios.post(`${process.env.REACT_APP_API_URL}/api/users/logout`, {}, {
-        headers: {
-          Authorization: `Bearer ${user.token}`
-        }
-      });
-      logout();
-      navigate("/login");
-    } catch (error) {
-      console.error("Logout failed:", error);
-    }
+    await logout();
+    navigate("/login");
   };
 
   return (
-    <StyledNavbar
-      expanded={expand}
-      fixed="top"
-      expand="md"
-      navColour={navColour}
-    >
+    <StyledNavbar expand="md" fixed="top" navColour={true}>
       <Container>
         <Navbar.Brand href="/" className="d-flex">
-          <StyledNavbarBrandText>Auth</StyledNavbarBrandText>
+          <StyledNavbarBrandText>AuthApp</StyledNavbarBrandText>
         </Navbar.Brand>
-        <Navbar.Toggle
-          aria-controls="responsive-navbar-nav"
-          onClick={() => {
-            updateExpanded(expand ? false : "expanded");
-          }}
-        />
-        <StyledCollapse id="responsive-navbar-nav" expand={expand}>
+        <Navbar.Toggle aria-controls="responsive-navbar-nav" />
+        <StyledCollapse id="responsive-navbar-nav">
           <Nav className="ms-auto" defaultActiveKey="#home">
             <Nav.Item>
-              <StyledNavLink as={Link} to="/" onClick={() => updateExpanded(false)}>
+              <StyledNavLink as={Link} to="/">
                 Home
               </StyledNavLink>
             </Nav.Item>
@@ -99,12 +65,12 @@ function Header() {
             {!isAuth && (
               <>
                 <Nav.Item>
-                  <StyledNavLink as={Link} to="/login" onClick={() => updateExpanded(false)}>
+                  <StyledNavLink as={Link} to="/login">
                     Login
                   </StyledNavLink>
                 </Nav.Item>
                 <Nav.Item>
-                  <StyledNavLink as={Link} to="/register" onClick={() => updateExpanded(false)}>
+                  <StyledNavLink as={Link} to="/register">
                     Register
                   </StyledNavLink>
                 </Nav.Item>
@@ -114,13 +80,12 @@ function Header() {
             {isAuth && user && (
               <>
                 <Nav.Item>
-                  <StyledNavLink as={Link} to="/profile" onClick={() => updateExpanded(false)}>
+                  <StyledNavLink as={Link} to="/profile">
                     Profile
                   </StyledNavLink>
                 </Nav.Item>
-                
                 <Nav.Item>
-                  <StyledButton className="btn btn-outline-light" onClick={handleLogout}>
+                  <StyledButton onClick={handleLogout} className="btn btn-outline-light">
                     Logout
                   </StyledButton>
                 </Nav.Item>

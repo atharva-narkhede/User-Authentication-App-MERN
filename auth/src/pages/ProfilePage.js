@@ -1,71 +1,140 @@
 import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
+import Cookies from 'js-cookie';
 import { AuthContext } from '../context/AuthContext';
 
 const ProfilePage = () => {
   const { user, login } = useContext(AuthContext);
   const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [selectedFields, setSelectedFields] = useState([]);
+  const [message, setMessage] = useState(null);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     if (user) {
       setUsername(user.username);
-      setEmail(user.email);
     }
   }, [user]);
 
+  const handleFieldSelection = (field) => {
+    setSelectedFields((prevFields) =>
+      prevFields.includes(field)
+        ? prevFields.filter((f) => f !== field)
+        : [...prevFields, field]
+    );
+  };
+
   const submitHandler = async (e) => {
     e.preventDefault();
-    if (password.length > 0 && password.length < 6) {
-      alert("Password must be at least 6 characters long");
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match.');
       return;
     }
+
+    const updatedData = {};
+    if (selectedFields.includes('username') && username !== user.username) {
+      updatedData.username = username;
+    }
+    if (selectedFields.includes('password') && password.length >= 6) {
+      updatedData.password = password;
+    }
+
+    if (Object.keys(updatedData).length === 0) {
+      setMessage('No changes to update.');
+      return;
+    }
+
     try {
-      const { data } = await axios.put(`${process.env.REACT_APP_API_URL}/api/users/profile`, { username, email, password }, {
-        headers: {
-          Authorization: `Bearer ${user.token}`
-        },
-        withCredentials: true
+      const { data } = await axios.put(
+        `${process.env.REACT_APP_API_URL}/api/users/profile`,
+        updatedData,
+        {
+          headers: {
+            'x-api-key': process.env.REACT_APP_API_KEY,
+          },
+          withCredentials: true,
+        }
+      );
+
+      login({
+        _id: data._id,
+        username: data.username,
+        email: data.email,
+        token: Cookies.get('token'),
       });
-      login(data);
+      setMessage('Profile updated successfully!');
+      setError(null);
     } catch (error) {
-      console.error('Failed to update profile:', error);
+      setMessage(null);
+      setError(
+        error.response && error.response.data.message
+          ? error.response.data.message
+          : 'Failed to update profile.'
+      );
     }
   };
 
   return (
     <div className="container mt-5">
       <h2 className="text-center text-primary">Profile</h2>
+      {message && <div className="alert alert-success text-center">{message}</div>}
+      {error && <div className="alert alert-danger text-center">{error}</div>}
       <form onSubmit={submitHandler} className="mx-auto" style={{ maxWidth: '400px' }}>
         <div className="form-group">
-          <label>Username:</label>
-          <input
-            type="text"
-            className="form-control"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-          />
+          <label>
+            <input
+              type="checkbox"
+              checked={selectedFields.includes('username')}
+              onChange={() => handleFieldSelection('username')}
+            />
+            Update Username
+          </label>
+          {selectedFields.includes('username') && (
+            <input
+              type="text"
+              className="form-control mt-2"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+            />
+          )}
         </div>
         <div className="form-group">
-          <label>Email:</label>
-          <input
-            type="email"
-            className="form-control"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
+          <label>
+            <input
+              type="checkbox"
+              checked={selectedFields.includes('password')}
+              onChange={() => handleFieldSelection('password')}
+            />
+            Update Password
+          </label>
+          {selectedFields.includes('password') && (
+            <>
+              <input
+                type="password"
+                className="form-control mt-2"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter new password"
+              />
+              <input
+                type="password"
+                className="form-control mt-2"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirm new password"
+              />
+              <small className="form-text text-muted">
+                Password must be at least 6 characters long.
+              </small>
+            </>
+          )}
         </div>
-        <div className="form-group">
-          <label>Password (optional):</label>
-          <input
-            type="password"
-            className="form-control"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </div>
-        <button type="submit" className="btn btn-primary d-block mx-auto">Update Profile</button>
+        <button type="submit" className="btn btn-primary d-block mx-auto">
+          Update Profile
+        </button>
       </form>
       <div className="mt-3 text-center">
         <h3>Profile Details</h3>
