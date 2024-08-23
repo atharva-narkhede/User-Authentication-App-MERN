@@ -25,12 +25,19 @@ This directory contains the backend code for the MERN Auth Project, built with N
 ### Configuration
 
 1. Create a `.env` file in the `backend` directory and add the following environment variables:
+
    ```env
    PORT=5000
    MONGO_URI=mongodb://localhost:27017/auth
-   JWT_SECRET=GITHUB
+   JWT_SECRET=YOUR_SECRET_KEY
    NODE_ENV=development
+   EMAIL_USER=your-email@example.com
+   EMAIL_PASS=your-email-password
+   API_KEY=YourAPIKey
+   FRONTEND_URL=http://localhost:3000
    ```
+
+   > **Note:** Replace the placeholder values (e.g., `YOUR_SECRET_KEY`, `your-email@example.com`) with your actual details.
 
 ### Running the Server
 
@@ -63,6 +70,12 @@ The following libraries are used in the backend for secure authentication and ot
 - **Register a new user**
   - **URL:** `/api/users/register`
   - **Method:** `POST`
+  - **Headers:**
+    ```json
+    {
+      "x-api-key": "YourAPIKey"
+    }
+    ```
   - **Body Parameters:**
     ```json
     {
@@ -77,13 +90,19 @@ The following libraries are used in the backend for secure authentication and ot
       "_id": "user_id",
       "username": "exampleuser",
       "email": "example@example.com",
-      "token": "jwt_token"
+      "message": "User registered successfully"
     }
     ```
 
 - **Authenticate a user and get a token**
   - **URL:** `/api/users/login`
   - **Method:** `POST`
+  - **Headers:**
+    ```json
+    {
+      "x-api-key": "YourAPIKey"
+    }
+    ```
   - **Body Parameters:**
     ```json
     {
@@ -107,7 +126,8 @@ The following libraries are used in the backend for secure authentication and ot
   - **Headers:**
     ```json
     {
-      "Authorization": "Bearer jwt_token"
+      "Authorization": "Bearer jwt_token",
+      "x-api-key": "YourAPIKey"
     }
     ```
   - **Response:**
@@ -123,7 +143,8 @@ The following libraries are used in the backend for secure authentication and ot
   - **Headers:**
     ```json
     {
-      "Authorization": "Bearer jwt_token"
+      "Authorization": "Bearer jwt_token",
+      "x-api-key": "YourAPIKey"
     }
     ```
   - **Response:**
@@ -141,10 +162,11 @@ The following libraries are used in the backend for secure authentication and ot
   - **Headers:**
     ```json
     {
-      "Authorization": "Bearer jwt_token"
+      "Authorization": "Bearer jwt_token",
+      "x-api-key": "YourAPIKey"
     }
     ```
-  - **Body Parameters:**
+  - **Body Parameters (Optional):**
     ```json
     {
       "username": "newusername",
@@ -162,10 +184,82 @@ The following libraries are used in the backend for secure authentication and ot
     }
     ```
 
+#### Password Management
+
+- **Forgot password (generate OTP)**
+  - **URL:** `/api/users/forgotpassword`
+  - **Method:** `POST`
+  - **Headers:**
+    ```json
+    {
+      "x-api-key": "YourAPIKey"
+    }
+    ```
+  - **Body Parameters:**
+    ```json
+    {
+      "email": "example@example.com"
+    }
+    ```
+  - **Response:**
+    ```json
+    {
+      "message": "OTP sent"
+    }
+    ```
+
+- **Reset password using OTP**
+  - **URL:** `/api/users/resetpassword`
+  - **Method:** `PUT`
+  - **Headers:**
+    ```json
+    {
+      "x-api-key": "YourAPIKey"
+    }
+    ```
+  - **Body Parameters:**
+    ```json
+    {
+      "otp": "123456",
+      "newPassword": "newpassword",
+      "email": "example@example.com"
+    }
+    ```
+  - **Response:**
+    ```json
+    {
+      "message": "Password reset successful"
+    }
+    ```
+
+- **Validate Token**
+  - **URL:** `/api/users/validateToken`
+  - **Method:** `GET`
+  - **Headers:**
+    ```json
+    {
+      "Authorization": "Bearer jwt_token",
+      "x-api-key": "YourAPIKey"
+    }
+    ```
+  - **Response:**
+    ```json
+    {
+      "message": "Token is valid",
+      "user": {
+        "id": "user_id",
+        "username": "exampleuser",
+        "email": "example@example.com"
+      }
+    }
+    ```
+
 ### Middleware
 
 - **authMiddleware.js**: Protect routes by ensuring the user is authenticated.
 - **errorMiddleware.js**: Handle errors and provide appropriate responses.
+- **apiKeyMiddleware.js**: Ensures API requests include a valid API key for access control.
+- **validators.js**: Contains validation rules for input data (located in the `middleware` directory).
 
 ### Models
 
@@ -173,7 +267,7 @@ The following libraries are used in the backend for secure authentication and ot
 
 ### Controllers
 
-- **userController.js**: Handle user registration, authentication, profile retrieval, and profile updates.
+- **userController.js**: Handle user registration, authentication, profile retrieval, password reset, and profile updates.
 
 ### Routes
 
@@ -181,7 +275,7 @@ The following libraries are used in the backend for secure authentication and ot
 
 ### Utilities
 
-- **logger.js**: Configure and manage logging.
+- **logger.js**: Configure and manage logging using `winston`.
 
 ## Contributing
 

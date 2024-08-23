@@ -144,31 +144,34 @@ const LoginPage = () => {
 
   return (
     <div className="container mt-5">
-      <h2 className="text-center text-primary">Login</h2>
+      <h2 className="text-center text-light" style={{ color: '#007bff' }}>Login</h2>
       {message && <div className="alert alert-success text-center">{message}</div>}
       {error && <div className="alert alert-danger text-center">{error}</div>}
-      <form onSubmit={handleLogin} className="mx-auto" style={{ maxWidth: '400px' }}>
+      <form onSubmit={handleLogin} className="mx-auto shadow p-4 rounded bg-light" style={{ maxWidth: '400px', border: '2px solid #007bff' }}>
         <div className="form-group">
-          <label>Email:</label>
+          <label style={{ fontWeight: 'bold', color: '#007bff' }}>Email:</label>
           <input
             type="email"
             className="form-control"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            style={{ borderColor: '#007bff', borderWidth: '2px' }}
           />
         </div>
+        <br></br>
         <div className="form-group">
-          <label>Password:</label>
+          <label style={{ fontWeight: 'bold', color: '#007bff' }}>Password:</label>
           <input
             type="password"
             className="form-control"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            style={{ borderColor: '#007bff', borderWidth: '2px' }}
           />
         </div>
-        <button type="submit" className="btn btn-primary d-block mx-auto">
+        <button type="submit" className="btn btn-primary d-block mx-auto mt-4" style={{ backgroundColor: '#007bff', borderColor: '#007bff', fontWeight: 'bold' }}>
           {loading ? <Spinner animation="border" size="sm" /> : 'Login'}
         </button>
         <p className="text-center mt-3">
@@ -176,6 +179,7 @@ const LoginPage = () => {
             type="button"
             className="btn btn-link"
             onClick={() => setShowModal(true)}
+            style={{ color: '#007bff', fontWeight: 'bold' }}
           >
             Forgot Password?
           </button>
@@ -184,7 +188,9 @@ const LoginPage = () => {
 
       <Modal show={showModal} onHide={closeModal}>
         <Modal.Header closeButton>
-          <Modal.Title>{modalStep === 'forgotPassword' ? 'Forgot Password' : 'Reset Password'}</Modal.Title>
+          <Modal.Title style={{ color: '#007bff', fontWeight: 'bold' }}>
+            {modalStep === 'forgotPassword' ? 'Forgot Password' : 'Reset Password'}
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {message && <div className="alert alert-success text-center">{message}</div>}
@@ -193,16 +199,18 @@ const LoginPage = () => {
           {modalStep === 'forgotPassword' && (
             <form onSubmit={handleForgotPassword}>
               <div className="form-group">
-                <label>Email:</label>
+                <label style={{ fontWeight: 'bold', color: '#007bff' }}>Email:</label>
                 <input
                   type="email"
                   className="form-control"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  style={{ borderColor: '#007bff', borderWidth: '2px' }}
                 />
               </div>
-              <button type="submit" className="btn btn-primary d-block mx-auto">
+              <br></br>
+              <button type="submit" className="btn btn-primary d-block mx-auto mt-4" style={{ backgroundColor: '#007bff', borderColor: '#007bff', fontWeight: 'bold' }}>
                 {loading ? <Spinner animation="border" size="sm" /> : 'Send OTP'}
               </button>
             </form>
@@ -211,7 +219,7 @@ const LoginPage = () => {
           {modalStep === 'resetPassword' && (
             <form onSubmit={handleResetPassword}>
               <div className="form-group">
-                <label>OTP:</label>
+                <label style={{ fontWeight: 'bold', color: '#007bff' }}>OTP:</label>
                 <div className="d-flex justify-content-between">
                   {otp.map((data, index) => (
                     <input
@@ -223,13 +231,14 @@ const LoginPage = () => {
                       onChange={(e) => handleOtpChange(e.target, index)}
                       onFocus={(e) => e.target.select()}
                       className="form-control text-center"
-                      style={{ width: '3rem', marginRight: '0.5rem' }}
+                      style={{ width: '3rem', marginRight: '0.5rem', borderColor: '#007bff', borderWidth: '2px' }}
                     />
                   ))}
                 </div>
               </div>
+              <br></br>
               <div className="form-group">
-                <label>New Password:</label>
+                <label style={{ fontWeight: 'bold', color: '#007bff' }}>New Password:</label>
                 <input
                   type="password"
                   className="form-control"
@@ -237,10 +246,12 @@ const LoginPage = () => {
                   onChange={(e) => setNewPassword(e.target.value)}
                   required
                   placeholder="Enter new password"
+                  style={{ borderColor: '#007bff', borderWidth: '2px' }}
                 />
               </div>
+              <br></br>
               <div className="form-group">
-                <label>Confirm Password:</label>
+                <label style={{ fontWeight: 'bold', color: '#007bff' }}>Confirm Password:</label>
                 <input
                   type="password"
                   className="form-control"
@@ -248,9 +259,11 @@ const LoginPage = () => {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
                   placeholder="Confirm new password"
+                  style={{ borderColor: '#007bff', borderWidth: '2px' }}
                 />
               </div>
-              <button type="submit" className="btn btn-primary d-block mx-auto">
+              <br></br>
+              <button type="submit" className="btn btn-primary d-block mx-auto mt-4" style={{ backgroundColor: '#007bff', borderColor: '#007bff', fontWeight: 'bold' }}>
                 {loading ? <Spinner animation="border" size="sm" /> : 'Reset Password'}
               </button>
             </form>
