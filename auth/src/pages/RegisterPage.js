@@ -31,8 +31,8 @@ const RegisterPage = () => {
           withCredentials: true,
         }
       );
-      login(data);
-      navigate('/profile');
+      
+      navigate('/login');
     } catch (error) {
       setError(
         error.response && error.response.data.message
