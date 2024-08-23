@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { Modal, Button } from 'react-bootstrap';
+import { Modal, Button, Spinner } from 'react-bootstrap';
 import { AuthContext } from '../context/AuthContext';
 
 const LoginPage = () => {
@@ -14,11 +14,13 @@ const LoginPage = () => {
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [modalStep, setModalStep] = useState('forgotPassword'); // forgotPassword, resetPassword
+  const [loading, setLoading] = useState(false);
   const { login } = React.useContext(AuthContext);
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setLoading(true);
     try {
       const { data } = await axios.post(
         `${process.env.REACT_APP_API_URL}/api/users/login`,
@@ -33,12 +35,19 @@ const LoginPage = () => {
       login(data);
       navigate('/profile');
     } catch (error) {
-      setError(error.response && error.response.data.message ? error.response.data.message : 'Login failed. Please check your credentials.');
+      setError(
+        error.response && error.response.data.message
+          ? error.response.data.message
+          : 'Login failed. Please check your credentials.'
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleForgotPassword = async (e) => {
     e.preventDefault();
+    setLoading(true);
     try {
       const { data } = await axios.post(
         `${process.env.REACT_APP_API_URL}/api/users/forgotpassword`,
@@ -54,22 +63,31 @@ const LoginPage = () => {
       setError(null);
       setModalStep('resetPassword');
     } catch (error) {
-      setError(error.response && error.response.data.message ? error.response.data.message : 'Failed to send OTP.');
+      setError(
+        error.response && error.response.data.message
+          ? error.response.data.message
+          : 'Failed to send OTP.'
+      );
       setMessage(null);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleResetPassword = async (e) => {
     e.preventDefault();
+    setLoading(true);
 
     const otpString = otp.join('');
     if (otpString.length !== 6) {
       setError('Please enter a valid 6-digit OTP.');
+      setLoading(false);
       return;
     }
 
     if (newPassword !== confirmPassword) {
       setError('Passwords do not match.');
+      setLoading(false);
       return;
     }
 
@@ -77,6 +95,7 @@ const LoginPage = () => {
       const { data } = await axios.put(
         `${process.env.REACT_APP_API_URL}/api/users/resetpassword`,
         {
+          email,
           otp: otpString,
           newPassword,
         },
@@ -94,8 +113,14 @@ const LoginPage = () => {
         setModalStep('forgotPassword');
       }, 3000);
     } catch (error) {
-      setError(error.response && error.response.data.message ? error.response.data.message : 'Failed to reset password.');
+      setError(
+        error.response && error.response.data.message
+          ? error.response.data.message
+          : 'Failed to reset password.'
+      );
       setMessage(null);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -105,7 +130,6 @@ const LoginPage = () => {
     newOtp[index] = element.value;
     setOtp(newOtp);
 
-    // Focus next input box if not the last one
     if (element.nextSibling) {
       element.nextSibling.focus();
     }
@@ -145,10 +169,16 @@ const LoginPage = () => {
           />
         </div>
         <button type="submit" className="btn btn-primary d-block mx-auto">
-          Login
+          {loading ? <Spinner animation="border" size="sm" /> : 'Login'}
         </button>
         <p className="text-center mt-3">
-          <a href="#" onClick={() => setShowModal(true)}>Forgot Password?</a>
+          <button
+            type="button"
+            className="btn btn-link"
+            onClick={() => setShowModal(true)}
+          >
+            Forgot Password?
+          </button>
         </p>
       </form>
 
@@ -173,7 +203,7 @@ const LoginPage = () => {
                 />
               </div>
               <button type="submit" className="btn btn-primary d-block mx-auto">
-                Send OTP
+                {loading ? <Spinner animation="border" size="sm" /> : 'Send OTP'}
               </button>
             </form>
           )}
@@ -221,7 +251,7 @@ const LoginPage = () => {
                 />
               </div>
               <button type="submit" className="btn btn-primary d-block mx-auto">
-                Reset Password
+                {loading ? <Spinner animation="border" size="sm" /> : 'Reset Password'}
               </button>
             </form>
           )}

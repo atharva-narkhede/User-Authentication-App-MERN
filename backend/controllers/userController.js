@@ -33,21 +33,11 @@ const registerUser = async (req, res) => {
     });
 
     if (user) {
-      const token = generateToken(user._id);
-      user.token = token;
-      await user.save();
 
-      res.cookie('token', token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-      });
-
-      res.status(201).json({
+      res.status(200).json({
         _id: user._id,
         username: user.username,
-        email: user.email,
-        token,
+        email: user.email
       });
     } else {
       res.status(400).json({ message: 'Invalid user data' });
@@ -228,10 +218,11 @@ const forgotPassword = async (req, res) => {
 };
 
 const resetPassword = async (req, res) => {
-  const { otp, newPassword } = req.body;
+  const { email, otp, newPassword } = req.body;
 
   try {
     const user = await User.findOne({
+      email,
       otpExpire: { $gt: Date.now() },
     });
 

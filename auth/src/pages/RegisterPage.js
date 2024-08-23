@@ -1,7 +1,7 @@
-import React, { useState, useContext } from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { AuthContext } from '../context/AuthContext';
+import { Spinner } from 'react-bootstrap';
 
 const RegisterPage = () => {
   const [username, setUsername] = useState('');
@@ -9,8 +9,8 @@ const RegisterPage = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { login } = useContext(AuthContext);
 
   const submitHandler = async (e) => {
     e.preventDefault();
@@ -20,8 +20,9 @@ const RegisterPage = () => {
       return;
     }
 
+    setLoading(true);
     try {
-      const { data } = await axios.post(
+      await axios.post(
         `${process.env.REACT_APP_API_URL}/api/users/register`,
         { username, email, password },
         {
@@ -39,6 +40,8 @@ const RegisterPage = () => {
           ? error.response.data.message
           : 'Registration failed. Please try again.'
       );
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -84,7 +87,7 @@ const RegisterPage = () => {
           />
         </div>
         <button type="submit" className="btn btn-primary d-block mx-auto">
-          Register
+          {loading ? <Spinner animation="border" size="sm" /> : 'Register'}
         </button>
       </form>
     </div>
