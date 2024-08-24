@@ -58,6 +58,7 @@ This repository contains a full-stack application built with the MERN stack (Mon
 1. **Create a `.env` file in the `auth` directory and add the following:**
    ```env
    REACT_APP_API_URL=http://localhost:5000
+   REACT_APP_API_KEY= "Backend API key"
    ```
 
 ### 🏃‍♂️ Running the Application

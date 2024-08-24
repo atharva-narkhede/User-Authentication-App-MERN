@@ -28,6 +28,7 @@ This directory contains the frontend code for the MERN Auth Project, built with 
 
    ```env
    REACT_APP_API_URL=http://localhost:5000
+   REACT_APP_API_KEY= "Backend API key"
    ```
 
    - `REACT_APP_API_URL`: This should point to the backend API server. By default, it's set to `http://localhost:5000`, which is the typical setup for local development.
