@@ -33,11 +33,10 @@ const registerUser = async (req, res) => {
     });
 
     if (user) {
-
       res.status(200).json({
         _id: user._id,
         username: user.username,
-        email: user.email
+        email: user.email,
       });
     } else {
       res.status(400).json({ message: 'Invalid user data' });
@@ -67,9 +66,8 @@ const authUser = async (req, res) => {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-        sameSite: 'None', // Required for cross-site cookies
+        sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
       });
-
 
       res.json({
         _id: user._id,
@@ -93,7 +91,13 @@ const logoutUser = async (req, res) => {
       await user.save();
     }
 
-    res.cookie('token', '', { httpOnly: true, expires: new Date(0), secure: process.env.NODE_ENV === 'production' });
+    res.cookie('token', '', { 
+      httpOnly: true, 
+      secure: process.env.NODE_ENV === 'production',
+      expires: new Date(0), 
+      sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
+    });
+    
     res.status(200).json({ message: 'Logged out successfully' });
   } catch (error) {
     res.status(500).json({ message: 'Server error' });
@@ -159,9 +163,8 @@ const updateUserProfile = async (req, res) => {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-        sameSite: 'None', // Required for cross-site cookies
+        sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
       });
-
 
       res.json({
         _id: updatedUser._id,
@@ -188,7 +191,6 @@ const forgotPassword = async (req, res) => {
     }
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    //console.log(otp)
     const hashedOTP = await bcrypt.hash(otp, 10);
 
     user.otp = hashedOTP;
